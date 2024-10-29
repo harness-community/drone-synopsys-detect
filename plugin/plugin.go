@@ -46,57 +46,67 @@ func runBlackDuckScan(p *Plugin) error {
 	}
 
 	var command string
-	if runtime.GOOS == "linux" {
-		command = fmt.Sprintf("java -jar /opt/jar/synopsys-detect-9.7.0.jar --blackduck.url=\"%s\" --blackduck.api.token=\"%s\" --detect.project.name=\"%s\"", bdURL, bdToken, bdProject)
-	} else if runtime.GOOS == "windows" {
-		command = fmt.Sprintf("C:\\opt\\jar\\synopsys-detect-9.7.0.jar --blackduck.url=\"%s\" --blackduck.api.token=\"%s\" --detect.project.name=\"%s\"", bdURL, bdToken, bdProject)
+	var args []string
+
+	if runtime.GOOS == "windows" {
+		args = []string{
+			"powershell.exe",
+			"-Command",
+			fmt.Sprintf("java -jar 'C:\\opt\\synopsys-detect-9.7.0.jar' --blackduck.url='%s' --blackduck.api.token='%s' --detect.project.name='%s'", bdURL, bdToken, bdProject),
+		}
+	} else {
+		command = fmt.Sprintf("java -jar /opt/synopsys-detect-9.7.0.jar --blackduck.url=\"%s\" --blackduck.api.token=\"%s\" --detect.project.name=\"%s\"", bdURL, bdToken, bdProject)
 	}
 
+	var additionalArgs string
 	if p.BlackduckOfflineMode {
-		command += " --blackduck.offline.mode=" + strconv.FormatBool(p.BlackduckOfflineMode)
+		additionalArgs += " --blackduck.offline.mode=" + strconv.FormatBool(p.BlackduckOfflineMode)
 	}
 
 	if p.BlackduckTestConnection {
-		command += " --detect.test.connection=" + strconv.FormatBool(p.BlackduckTestConnection)
+		additionalArgs += " --detect.test.connection=" + strconv.FormatBool(p.BlackduckTestConnection)
 	}
 
 	if p.BlackduckOfflineBDIO {
-		command += " --blackduck.offline.mode.force.bdio=" + strconv.FormatBool(p.BlackduckOfflineBDIO)
+		additionalArgs += " --blackduck.offline.mode.force.bdio=" + strconv.FormatBool(p.BlackduckOfflineBDIO)
 	}
 
 	if p.BlackduckTrustCerts {
-		command += " --blackduck.trust.cert=" + strconv.FormatBool(p.BlackduckTrustCerts)
+		additionalArgs += " --blackduck.trust.cert=" + strconv.FormatBool(p.BlackduckTrustCerts)
 	}
 
 	if p.BlackduckTimeout > 0 {
-		command += " --detect.timeout=" + strconv.Itoa(p.BlackduckTimeout)
+		additionalArgs += " --detect.timeout=" + strconv.Itoa(p.BlackduckTimeout)
 	}
 
 	// RAPID,STATELESS,INTELLIGENT
 	if p.BlackduckScanMode != "" {
 		switch p.BlackduckScanMode {
 		case "RAPID", "STATELESS", "INTELLIGENT":
-			command += " --detect.blackduck.scan.mode=" + p.BlackduckScanMode
+			additionalArgs += " --detect.blackduck.scan.mode=" + p.BlackduckScanMode
 		default:
 			log.Printf("Unexpected BlackduckScanMode: %s \n Scan mode can be RAPID, STATELESS, INTELLIGENT.", p.BlackduckScanMode)
 		}
 	}
 
 	if p.BLackduckProperties != "" {
-		command += " " + p.BLackduckProperties
+		additionalArgs += " " + p.BLackduckProperties
 	}
 
 	var cmd *exec.Cmd
-	if runtime.GOARCH == "amd64" || runtime.GOARCH == "arm64" {
-		cmd = exec.Command("bash", "-c", command)
+	if runtime.GOOS == "windows" {
+		args[2] += additionalArgs
+		cmd = exec.Command(args[0], args[1:]...)
 	} else {
-		cmd = exec.Command("cmd", "/C", command)
+		// For Linux and other systems
+		command += additionalArgs
+		cmd = exec.Command("bash", "-c", command)
 	}
+
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	fmt.Printf("Running command: %s\n", command)
-
+	fmt.Printf("Running command: %v\n", cmd.String())
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to execute Black Duck scan command: %w", err)
 	}

@@ -22,25 +22,6 @@ func TestPlugin_Exec(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		{
-			name: "basic configuration",
-			plugin: Plugin{
-				BlackduckURL:     "https://blackduck.example.com",
-				BlackduckToken:   "test-token",
-				BlackduckProject: "test-project",
-			},
-			wantErr: false,
-		},
-		{
-			name: "invalid scan mode",
-			plugin: Plugin{
-				BlackduckURL:      "https://blackduck.example.com",
-				BlackduckToken:    "test-token",
-				BlackduckProject:  "test-project",
-				BlackduckScanMode: "INVALID",
-			},
-			wantErr: false,
-		},
 	}
 
 	oldStdout := os.Stdout

@@ -15,12 +15,12 @@ This repository contains a plugin for running Synopsys Detect or Black Duck scan
 
 The plugin `plugins/synopsys-detect` is available for the following architectures:
 
-| OS            | Tag                 |
-|---------------|---------------------|
-| latest        | `linux-amd64/arm64` |
-| linux/amd64   | `linux-amd64`       |
-| linux/arm64   | `linux-arm64`       |
-| windows/amd64 | `windows-amd64`     |
+| OS                                 | Tag             |
+|------------------------------------|-----------------|
+| linux-amd64/arm64 or windows-amd64 | `latest`        |
+| linux/amd64                        | `linux-amd64`   |
+| linux/arm64                        | `linux-arm64`   |
+| windows/amd64                      | `windows-amd64` |
 
 
 ## Parameters
@@ -44,7 +44,11 @@ The plugin `plugins/synopsys-detect` is available for the following architecture
 Build the plugin image:
 
 ```text
+# building go binaries
 ./scripts/build.sh
+
+# downloading synopsys-detect jar file
+./scripts/download_detect.sh
 ```
 
 ## Examples
@@ -55,7 +59,7 @@ docker run --rm \
     -e PLUGIN_BLACKDUCK_TOKEN="$PLUGIN_BLACKDUCK_TOKEN" \
     -e PLUGIN_BLACKDUCK_PROJECT="$PLUGIN_BLACKDUCK_PROJECT" \
     -e PLUGIN_PROPERTIES="$PLUGIN_PROPERTIES" \
-    plugins/synopsys-detect
+    plugins/synopsys-detect:latest
 
 ```
 
@@ -67,7 +71,7 @@ docker run --rm \
     identifier: synopsys-detect-plugin-arm64
     spec:
         connectorRef: harness-docker-connector
-        image: plugins/synopsys-detect
+        image: plugins/synopsys-detect:linux-arm64
         settings:
             blackduck_url: https://abcd.blackduck.com/
             blackduck_token: some_token
@@ -80,7 +84,20 @@ docker run --rm \
     identifier: synopsys-detect-plugin-amd64
     spec:
         connectorRef: harness-docker-connector
-        image: plugins/synopsys-detect
+        image: plugins/synopsys-detect:linux-amd64
+        settings:
+            blackduck_url: https://abcd.blackduck.com/
+            blackduck_token: some_token
+            blackduck_project: test
+            
+            
+- step:
+    type: Plugin
+    name: synopsys-detect-plugin-windows-amd64
+    identifier: synopsys-detect-plugin-windows-amd64
+    spec:
+        connectorRef: harness-docker-connector
+        image: plugins/synopsys-detect:windows-amd64
         settings:
             blackduck_url: https://abcd.blackduck.com/
             blackduck_token: some_token

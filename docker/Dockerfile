@@ -2,11 +2,7 @@ FROM alpine:latest
 
 RUN apk add --no-cache bash curl openjdk11-jre
 
-COPY scripts/download_detect.sh /opt/
-
-RUN chmod +x /opt/download_detect.sh
-
-RUN /opt/download_detect.sh
+COPY synopsys-detect-9.7.0.jar /opt/
 
 COPY release/linux/amd64/blackduck-plugin /bin/
 
