@@ -1,0 +1,27 @@
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
+
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+USER ContainerAdministrator
+
+# Install Java
+RUN Write-Host 'Downloading Java...' ; \
+    Invoke-WebRequest -Uri https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_windows-x64_bin.zip -OutFile C:/jdk.zip ; \
+    Write-Host 'Extracting Java...' ; \
+    Expand-Archive C:/jdk.zip -DestinationPath C:/ ; \
+    Remove-Item C:/jdk.zip ; \
+    Write-Host 'Setting up environment...' ; \
+    $env:JAVA_HOME = 'C:\jdk-11.0.2' ; \
+    [Environment]::SetEnvironmentVariable('JAVA_HOME', $env:JAVA_HOME, [EnvironmentVariableTarget]::Machine) ; \
+    $env:Path += ';C:\jdk-11.0.2\bin' ; \
+    [Environment]::SetEnvironmentVariable('Path', $env:Path, [EnvironmentVariableTarget]::Machine) ; \
+    Write-Host 'Verifying Java installation...' ; \
+    java -version
+
+COPY synopsys-detect-9.7.0.jar C:/opt/
+
+# Copy the Black Duck plugin executable
+COPY release/windows/amd64/blackduck-plugin.exe C:/bin/
+
+# Define entrypoint
+ENTRYPOINT ["C:/bin/blackduck-plugin.exe"]

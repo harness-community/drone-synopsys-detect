@@ -1,0 +1,7 @@
+.idea
+release/
+blackduck-plugin
+opt/
+jar/
+tmp/
+synopsys-detect-9.7.0.jar
